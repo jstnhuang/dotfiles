@@ -37,7 +37,7 @@ fi
 
 # set a fancy prompt (non-color, unless we know we "want" color)
 case "$TERM" in
-    xterm-color) color_prompt=yes;;
+    xterm-color|*-256color) color_prompt=yes;;
 esac
 
 # uncomment for a colored prompt, if the terminal has the capability; turned
@@ -83,6 +83,9 @@ if [ -x /usr/bin/dircolors ]; then
     alias fgrep='fgrep --color=auto'
     alias egrep='egrep --color=auto'
 fi
+
+# colored GCC warnings and errors
+#export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01'
 
 # some more ls aliases
 alias ll='ls -alF'
@@ -139,146 +142,16 @@ alias ga='git add'
 alias gd='git diff'
 alias gid='git icdiff'
 
-set_upstream() {
-  git branch --set-upstream-to=$1/$2 $2
-}
 gfh() {
   grep -ri $1 *;
 }
-vfn() {
-  vim `find -name $1`
-}
-ros_logs() {
-  cd ~/.ros/log/`rosparam get run_id`
-}
 
 # Terminal prompt formatting.
-#PS1='\[\e[1;35m\][\h \w]$ \[\e[m\]'
-PS1='\[\e[1;35m\][$ROS_WS \h \w]$ \[\e[m\]'
+PS1='\[\e[1;35m\][\h \w]$ \[\e[m\]'
 
 # vi mode
 export VISUAL=vim
 set -o vi
 
-# Call setros groovy or setros hydro to source the appropriate environment.
-function setros() {
-  source /opt/ros/$1/setup.bash
-  source ~/catkin_ws_$1/devel/setup.bash --extend
-}
-source /opt/ros/indigo/setup.bash # Run setup commands for ROS stuff.
-#source ~/catkin_ws_indigo/devel/setup.bash --extend
-
-function setws() {
-  if [ "$1" = "catkin" ]; then
-    source ~/catkin_ws_indigo/devel/setup.bash
-    export ROS_WS=catkin
-  else 
-    source ~/$1_ws/devel/setup.bash
-    export ROS_WS=$1
-  fi
-}
-
-function addws() {
-  source ~/$1_ws/devel/setup.bash
-  export ROS_WS=$ROS_WS:$1
-}
-
-export ROS_HOSTNAME=olivaw # Optional, the name of this computer.
-export ROS_MASTER_URI=http://localhost:11311 # The location of the ROS master.
-export ROBOT=sim # The type of robot.
-export ROSCONSOLE_FORMAT='${time} ${node} ${function}:${line}: ${message}'
-export ROS_WS=.
-export KINECT1=true
-
-# Get IP address on ethernet
-# If you're on a laptop, change eth0 to wlan0
-function my_ip() {
-    MY_IP=$(/sbin/ifconfig eth0 | awk '/inet/ { print $2 } ' | sed -e s/addr://)
-    echo ${MY_IP:-"Not connected"}
-}
-
-function setrobot() {
-  if [ "$1" = "sim" ]; then
-    export ROS_HOSTNAME=olivaw;
-    export ROS_MASTER_HOST=olivaw;
-    export ROS_MASTER_URI=http://olivaw:11311;
-    export ROBOT=sim;
-  elif [ "$1" = "c1" ]; then
-    unset ROBOT;
-    unset ROS_HOSTNAME;
-    export ROS_MASTER_HOST=$1;
-    export ROS_MASTER_URI=http://mayarobot-wired:11311;
-    export ROS_IP=`my_ip`;
-  elif [ "$1" = "astro" ]; then
-    unset ROBOT;
-    unset ROS_HOSTNAME;
-    export ROS_MASTER_HOST=$1;
-    export ROS_MASTER_URI=http://$1:11311;
-    export ROS_IP=`my_ip`;
-  elif [ "$1" = "mayarobot-wired" ]; then
-    unset ROBOT;
-    unset ROS_HOSTNAME;
-    export ROS_MASTER_HOST=c1;
-    export ROS_MASTER_URI=http://mayarobot-wired:11311;
-    export ROS_IP=`my_ip`;
-  else
-    unset ROBOT;
-    unset ROS_HOSTNAME;
-    export ROS_MASTER_HOST=$1;
-    export ROS_MASTER_URI=http://$1.cs.washington.edu:11311;
-    export ROS_IP=`my_ip`;
-  fi
-}
-
-function hostrobot() {
-  export ROS_HOSTNAME=olivaw.cs.washington.edu
-  export ROS_MASTER_URI=http://olivaw.cs.washington.edu:11311
-  export DISPLAY=:0
-  export ROS_IP=`my_ip`
-  export ROBOT=sim
-}
-
-export TURTLEBOT_GAZEBO_WORLD_FILE="/opt/ros/indigo/share/turtlebot_gazebo/worlds/playground.world"
-
-# Go
-export PATH=$PATH:/usr/local/go/bin
-export GOPATH=$HOME/go
-export PATH=$PATH:$GOPATH/bin
-
-# Clang-format
-export PATH=$PATH:/home/jstn/local/clang+llvm-6.0.0-x86_64-linux-gnu-ubuntu-14.04/bin
-
-# Custom scripts
-export PATH=$PATH:~/scripts
-
 # icdiff
-export PATH=$PATH:/home/jstn/local/icdiff
-
-# Caddy
-export PATH=$PATH:/home/jstn/local/caddy
-
-# Cuda
-export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/usr/lib/x86_64-linux-gnu/"
-export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/usr/local/cuda/lib64"
-export CUDA_HOME=/usr/local/cuda
-export CUDA_ROOT=/usr/local/cuda
-
-# Tracking project: source tensorflow
-function setvenv() {
-  source /home/jstn/venvs/$1/bin/activate
-}
-
-# Caffe
-#export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/usr/lib/atlas-base"
-#export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/usr/local/caffe/lib"
-
-function getdeps() {
-  rosdep install --from-paths src --ignore-src --rosdistro=$ROS_DISTRO -y
-}
-
-export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
-[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
-
-# added by travis gem
-[ -f /home/jstn/.travis/travis.sh ] && source /home/jstn/.travis/travis.sh
+export PATH=$PATH:$HOME/local/icdiff
